@@ -29,13 +29,15 @@ class TickerValidator:
         it in a database
     """
 
-    def __init__(self, fn):
+    def __init__(self, fn, debug=0):
         """
         constructor
         :param fn: backing file which stores
+        :param debug: whether we are in debug mode
         """
         self.db = {}
         self.fn = fn
+        self.debug = debug
         try:
             self.load(fn)
         except FileNotFoundError:
@@ -77,12 +79,14 @@ class TickerValidator:
         self.db[sym] = bool
         return bool
 
-    @staticmethod
-    def validate(sym):
+    def validate(self, sym):
         """
         Run an online check for the ticker symbol
         """
         try:
+            if self.debug:
+                print("Checking " + sym + " with Yahoo Finance",
+                      file=sys.stderr)
             ticker = yfinance.Ticker(sym)
             ticker.info
             r = True
@@ -109,4 +113,13 @@ class TickerValidator:
 
 if __name__ == '__main__':
     # Do something here
-    print("Hello world!")
+    db = TickerValidator('test.db', debug=1)
+    print("Checking MSFT")
+    print(db.is_valid('MSFT'))
+    print("Checking MSFT")
+    print(db.is_valid('MSFT'))
+    print("Checking INVALID")
+    print(db.is_valid('INVALID'))
+    print("Checking INVALID")
+    print(db.is_valid('INVALID'))
+    del db
