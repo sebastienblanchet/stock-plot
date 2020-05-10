@@ -79,19 +79,21 @@ class TickerValidator:
         self.db[sym] = bool
         return bool
 
-    def validate(self, sym):
+    def validate(self, sym, debug=0):
         """
         Run an online check for the ticker symbol
         """
         try:
-            if self.debug:
-                print("Checking " + sym + " with Yahoo Finance",
-                      file=sys.stderr)
             ticker = yfinance.Ticker(sym)
             ticker.info
             r = True
         except (KeyError, ValueError, IndexError) as e:
             r = False
+        self.set_sym(sym, r)
+
+        if self.debug or debug:
+            print("Checked " + sym + " with Yahoo Finance... " + str(r),
+                  file=sys.stderr)
         return r
 
     def is_valid(self, sym):
@@ -101,15 +103,15 @@ class TickerValidator:
         try:
             r = self.db[sym]
         except KeyError:
-            r = self.set_sym(sym, self.validate(sym))
+            r = self.validate(sym)
         return r
 
     def revalidate_all(self):
         """
         revalidate all ticket symbols
         """
-        print("")
-
+        for i in self.db.keys():
+            self.validate(i, debug=1)
 
 if __name__ == '__main__':
     # Do something here
@@ -122,4 +124,6 @@ if __name__ == '__main__':
     print(db.is_valid('INVALID'))
     print("Checking INVALID")
     print(db.is_valid('INVALID'))
+    db.revalidate_all()
+    # Need that to avoid warning at exit
     del db
