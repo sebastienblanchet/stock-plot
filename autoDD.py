@@ -23,7 +23,7 @@ __copyright__ = "The GNU General Public License v3.0"
 from psaw import PushshiftAPI
 from datetime import datetime, timedelta
 import re
-
+from tickerValidator import TickerValidator
 
 def filter_tbl(tbl, min):
     """
@@ -66,7 +66,7 @@ def get_freq_list(gen):
     """
 
     # Python regex pattern for stocks codes
-    pattern = "[A-Z]{3,4}"
+    pattern = "[A-Za-z]{3,4}"
     # Dictionary containing the summaries
     title_dict = {}
     selftext_dict = {}
@@ -76,7 +76,8 @@ def get_freq_list(gen):
         if hasattr(i, 'title'):
             title = ' ' + i.title + ' '
             title_extracted = re.findall(pattern, title)
-            for j in title_extracted:
+            for k in title_extracted:
+                j = k.upper()
                 if j in title_dict:
                     title_dict[j] += 1
                 else:
@@ -90,7 +91,8 @@ def get_freq_list(gen):
         if hasattr(i, 'selftext'):
             selftext = ' ' + i.selftext + ' '
             selftext_extracted = re.findall(pattern, selftext)
-            for j in selftext_extracted:
+            for k in selftext_extracted:
+                j = k.upper()
                 if j in selftext_dict:
                     selftext_dict[j] += 1
                 else:

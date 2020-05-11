@@ -17,6 +17,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+__author__ = "Fufu Fang"
+__copyright__ = "The GNU General Public License v3.0"
+
 import pickle
 import yfinance
 import sys
@@ -30,8 +33,7 @@ class TickerValidator:
     """
 
     def __init__(self, fn, debug=0):
-        """
-        constructor
+        """ Constructor
         :param fn: backing file which stores
         :param debug: whether we are in debug mode
         """
@@ -45,44 +47,33 @@ class TickerValidator:
             self.db = {}
 
     def __del__(self):
-        """
-        destructor
-        """
         self.save(self.fn)
 
     def load(self, fn):
-        """
-        load the ticker database
+        """ load the ticker database
         :param fn: database filename
         """
         with open(fn, "rb") as f:
             self.db = pickle.load(f)
 
     def save(self, fn):
-        """
-        save the ticker database
+        """ save the ticker database
         :param fn: database filename
         """
         with open(fn, "wb") as f:
             pickle.dump(self.db, f)
 
     def remove(self, sym):
-        """
-        remove a ticker from the database
-        """
+        """ remove a ticker from the database """
         self.db.pop(sym, None)
 
     def set_sym(self, sym, bool):
-        """
-        Set a ticker symbol's state.
-        """
+        """ Set a ticker symbol's state. """
         self.db[sym] = bool
         return bool
 
     def validate(self, sym, debug=0):
-        """
-        Run an online check for the ticker symbol
-        """
+        """ Run an online check for the ticker symbol """
         try:
             ticker = yfinance.Ticker(sym)
             ticker.info
@@ -97,9 +88,7 @@ class TickerValidator:
         return r
 
     def is_valid(self, sym):
-        """
-        Check if a ticker symbol is valid
-        """
+        """ Check if a ticker symbol is valid """
         try:
             r = self.db[sym]
         except KeyError:
@@ -107,14 +96,14 @@ class TickerValidator:
         return r
 
     def revalidate_all(self):
-        """
-        revalidate all ticket symbols
-        """
+        """ revalidate all ticket symbols """
         for i in self.db.keys():
             self.validate(i, debug=1)
 
+
 if __name__ == '__main__':
-    # Do something here
+
+    # Test script
     db = TickerValidator('test.db', debug=1)
     print("Checking MSFT")
     print(db.is_valid('MSFT'))
