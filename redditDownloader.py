@@ -23,54 +23,122 @@ __copyright__ = "The GNU General Public License v3.0"
 from psaw import PushshiftAPI
 import pickle
 
+
+class RedditRecord:
+    def __init__(self, subreddit, author, permalink, score, created_utc):
+        self.subreddit = subreddit
+        self.author = author
+        self.permalink = permalink
+        self.score = score
+        self.created_utc = created_utc
+
+    def __repr__(self):
+        return 'subreddit: ' + str(self.subreddit) + '\n' + \
+        'author: ' + str(self.author) + '\n' + \
+        'permalink: ' + str(self.permalink) + '\n' + \
+        'score: ' + str(self.score) + '\n' + \
+        'created_utc: ' + str(self.created_utc) + '\n'
+
+
+
+class RedditSubmission(RedditRecord):
+    def __init__(self, subreddit, author, permalink, score, created_utc,
+                 title, selftext, upvote_ratio, removed_by_category):
+        super().__init__(subreddit, author, permalink, score, created_utc)
+        self.title = title
+        self.selftext = selftext
+        self.upvote_ratio = upvote_ratio
+        self.removed_by_category = removed_by_category
+
+    def __repr__(self):
+        return super().__repr__() + \
+        'title: ' + str(self.title) + '\n' + \
+        'selftext: ' + str(self.selftext) + '\n' + \
+        'upvote_ratio: ' + str(self.upvote_ratio) + '\n' + \
+        'removed_by_category: ' + str(self.removed_by_category) + '\n'
+
+
+class RedditComment(RedditRecord):
+    def __init__(self, subreddit, author, permalink, score, created_utc, body):
+        super().__init__(subreddit, author, permalink, score, created_utc)
+        self.body = body
+
+    def __repr__(self):
+        return super().__repr__() + \
+        'body: ' + str(self.body) + '\n'
+
 class RedditGenerator:
-    def __init__(self, s_time, e_time):
+    def __init__(self, s_name, s_time, e_time):
         """ constructor
+        :param s_name: subreddit name
         :param s_time: start time as a datetime object
         :param e_time: end time as a datetime object
         """
-        s_time = int(s_time.timestamp())
-        e_time = int(e_time.timestamp())
+        self.s_name = s_name
+        self.s_time = int(s_time.timestamp())
+        self.e_time = int(e_time.timestamp())
 
     def __iter__(self):
         return self
 
+    def save(self, fn):
+        """ save the content of the generator as a picked list """
+        with open(fn, "wb") as f:
+            pickle.dump(list(self), f)
 
-class RedditPosts(RedditGenerator):
+
+class RedditSubmissionGenerator(RedditGenerator):
     """ Class for download Reddit posts """
 
     def __init__(self, s_name, s_time, e_time, download_deleted=False):
         """ constructor
-        :param s_name: subreddit name
         :param download_deleted: whether to download deleted posts
         """
-        super().__init__(s_time, e_time)
+        super().__init__(s_name, s_time, e_time)
         self.download_deleted = download_deleted
         self._gen = PushshiftAPI().search_submissions(
-            subreddit=s_name, after=s_time, before=e_time,
-            filter=['title', 'selftext', 'author', 'permalink', 'score',
-                    'upvote_ratio', 'removed_by_category', 'created_utc'])
+            subreddit=self.s_name, after=self.s_time, before=self.e_time,
+            filter=['subreddit', 'author', 'permalink', 'score', 'created_utc',
+                    'title', 'selftext', 'upvote_ratio', 'removed_by_category'])
 
     def __next__(self):
         while True:
             p = next(self._gen)
             if hasattr(p, 'removed_by_category'):
                 if self.download_deleted:
-                    return p
+                    return self._formatter(p)
                 else:
                     # skip deleted items if not needed
                     continue
-            return p
+            return self._formatter(p)
+
+    @staticmethod
+    def _formatter(p):
+        if not hasattr(p, 'removed_by_category'):
+            rm = 'None'
+        else:
+            rm = p.removed_by_category
+        r = RedditSubmission(subreddit=p.subreddit,
+                             author=p.author,
+                             permalink=p.permalink,
+                             score=p.score,
+                             created_utc=p.created_utc,
+                             title=p.title,
+                             selftext=p.selftext,
+                             upvote_ratio=p.upvote_ratio,
+                             removed_by_category=rm)
+        return r
 
 
-class RedditComments(RedditGenerator):
+class RedditCommentGenerator(RedditGenerator):
     """ Class for download Reddit comments """
 
     def __init__(self, s_name, s_time, e_time):
-        super().__init__(s_time, e_time)
+        super().__init__(s_name, s_time, e_time)
         self._gen = PushshiftAPI().search_comments(
-            subreddit=s_name, after=s_time, before=e_time,
-            filter=['body', 'author', 'permalink', 'score', 'created_utc'])
+            subreddit=self.s_name, after=self.s_time, before=self.e_time,
+            filter=['subreddit', 'author', 'permalink', 'score', 'created_utc',
+                    'body'])
 
     def __next__(self):
         while True:
@@ -78,19 +146,46 @@ class RedditComments(RedditGenerator):
             if p.body == '[removed]':
                 # skip empty item
                 continue
-            return p
+            return self._formatter(p)
+
+    @staticmethod
+    def _formatter(p):
+        r = RedditComment(subreddit=p.subreddit,
+                         author=p.author,
+                         permalink=p.permalink,
+                         score=p.score,
+                         created_utc=p.created_utc,
+                         body=p.body)
+        return r
 
 
 if __name__ == '__main__':
-
     ## Test script ##
     from datetime import timedelta, datetime
 
     e_time = datetime.now()
     s_time = e_time - timedelta(1)
-    post_gen = RedditPosts('pennystocks', s_time, e_time)
-    comment_gen = RedditComments('pennystocks', s_time, e_time)
+
+    post_gen = RedditSubmissionGenerator('pennystocks', s_time, e_time)
+    comment_gen = RedditCommentGenerator('pennystocks', s_time, e_time)
+
     print(next(post_gen))
     print(next(comment_gen))
-    # print('No. submission ' + str(len(list(post_gen))))
-    # print('No. comments ' + str(len(list(comment_gen))))
+
+    post_fn = 'submission-' + post_gen.s_name + \
+              str(datetime.now().isoformat()) + '.pickle'
+    post_gen.save(post_fn)
+    comment_fn = 'comment-' + post_gen.s_name + \
+                 str(datetime.now().isoformat()) + '.pickle'
+    comment_gen.save(comment_fn)
+
+    with open(post_fn, "rb") as f:
+        posts = pickle.load(f)
+
+    with open(comment_fn, "rb") as f:
+        comments = pickle.load(f)
+
+    print('No. submission ' + str(len(posts)))
+    print(posts[1])
+    print('No. comments ' + str(len(comments)))
+    print(comments[1])
