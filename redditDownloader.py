@@ -33,12 +33,11 @@ class RedditRecord:
         self.created_utc = created_utc
 
     def __repr__(self):
-        return 'subreddit: ' + str(self.subreddit) + '\n' + \
-        'author: ' + str(self.author) + '\n' + \
-        'permalink: ' + str(self.permalink) + '\n' + \
-        'score: ' + str(self.score) + '\n' + \
-        'created_utc: ' + str(self.created_utc) + '\n'
-
+        return "subreddit: " + str(self.subreddit) + "\n" + \
+               "author: " + str(self.author) + "\n" + \
+               "permalink: " + str(self.permalink) + "\n" + \
+               "score: " + str(self.score) + "\n" + \
+               "created_utc: " + str(self.created_utc) + "\n"
 
 
 class RedditSubmission(RedditRecord):
@@ -52,10 +51,10 @@ class RedditSubmission(RedditRecord):
 
     def __repr__(self):
         return super().__repr__() + \
-        'title: ' + str(self.title) + '\n' + \
-        'selftext: ' + str(self.selftext) + '\n' + \
-        'upvote_ratio: ' + str(self.upvote_ratio) + '\n' + \
-        'removed_by_category: ' + str(self.removed_by_category) + '\n'
+            "title: " + str(self.title) + "\n" + \
+            "selftext: " + str(self.selftext) + "\n" + \
+            "upvote_ratio: " + str(self.upvote_ratio) + "\n" + \
+            "removed_by_category: " + str(self.removed_by_category) + "\n"
 
 
 class RedditComment(RedditRecord):
@@ -65,7 +64,8 @@ class RedditComment(RedditRecord):
 
     def __repr__(self):
         return super().__repr__() + \
-        'body: ' + str(self.body) + '\n'
+            "body: " + str(self.body) + "\n"
+
 
 class RedditGenerator:
     def __init__(self, s_name, s_time, e_time):
@@ -102,13 +102,13 @@ class SubmissionGenerator(RedditGenerator):
         self.download_deleted = download_deleted
         self._gen = self._api.search_submissions(
             subreddit=self.s_name, after=self.s_time, before=self.e_time,
-            filter=['subreddit', 'author', 'permalink', 'score', 'created_utc',
-                    'title', 'selftext', 'upvote_ratio', 'removed_by_category'])
+            filter=["subreddit", "author", "permalink", "score", "created_utc",
+                    "title", "selftext", "upvote_ratio", "removed_by_category"])
 
     def __next__(self):
         while True:
             p = next(self._gen)
-            if hasattr(p, 'removed_by_category'):
+            if hasattr(p, "removed_by_category"):
                 if self.download_deleted:
                     return self._formatter(p)
                 else:
@@ -118,8 +118,8 @@ class SubmissionGenerator(RedditGenerator):
 
     @staticmethod
     def _formatter(p):
-        if not hasattr(p, 'removed_by_category'):
-            rm = 'None'
+        if not hasattr(p, "removed_by_category"):
+            rm = "None"
         else:
             rm = p.removed_by_category
         r = RedditSubmission(subreddit=p.subreddit,
@@ -146,13 +146,13 @@ class CommentGenerator(RedditGenerator):
         super().__init__(s_name, s_time, e_time)
         self._gen = self._api.search_comments(
             subreddit=self.s_name, after=self.s_time, before=self.e_time,
-            filter=['subreddit', 'author', 'permalink', 'score', 'created_utc',
-                    'body'])
+            filter=["subreddit", "author", "permalink", "score", "created_utc",
+                    "body"])
 
     def __next__(self):
         while True:
             p = next(self._gen)
-            if p.body == '[removed]':
+            if p.body == "[removed]":
                 # skip empty item
                 continue
             return self._formatter(p)
@@ -160,32 +160,32 @@ class CommentGenerator(RedditGenerator):
     @staticmethod
     def _formatter(p):
         r = RedditComment(subreddit=p.subreddit,
-                         author=p.author,
-                         permalink=p.permalink,
-                         score=p.score,
-                         created_utc=p.created_utc,
-                         body=p.body)
+                          author=p.author,
+                          permalink=p.permalink,
+                          score=p.score,
+                          created_utc=p.created_utc,
+                          body=p.body)
         return r
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ## Test script ##
     from datetime import timedelta, datetime
 
     e_time = datetime.now()
     s_time = e_time - timedelta(1)
 
-    post_gen = SubmissionGenerator('pennystocks', s_time, e_time)
-    comment_gen = CommentGenerator('pennystocks', s_time, e_time)
+    post_gen = SubmissionGenerator("pennystocks", s_time, e_time)
+    comment_gen = CommentGenerator("pennystocks", s_time, e_time)
 
     print(next(post_gen))
     print(next(comment_gen))
 
-    post_fn = 'submission-' + post_gen.s_name + \
-              str(datetime.now().isoformat()) + '.pickle'
+    post_fn = "submission-" + post_gen.s_name + \
+              str(datetime.now().isoformat()) + ".pickle"
     post_gen.save_all(post_fn)
-    comment_fn = 'comment-' + post_gen.s_name + \
-                 str(datetime.now().isoformat()) + '.pickle'
+    comment_fn = "comment-" + post_gen.s_name + \
+                 str(datetime.now().isoformat()) + ".pickle"
     comment_gen.save_all(comment_fn)
 
     with open(post_fn, "rb") as f:
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     with open(comment_fn, "rb") as f:
         comments = pickle.load(f)
 
-    print('No. submission ' + str(len(posts)))
+    print("No. submission " + str(len(posts)))
     print(posts[1])
-    print('No. comments ' + str(len(comments)))
+    print("No. comments " + str(len(comments)))
     print(comments[1])

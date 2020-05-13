@@ -68,7 +68,7 @@ class TickerValidator:
         self.db.pop(sym, None)
 
     def set_sym(self, sym, bool):
-        """ Set a ticker symbol's state. """
+        """ Set a ticker symbol"s state. """
         self.db[sym] = bool
         return bool
 
@@ -101,18 +101,18 @@ class TickerValidator:
             self.validate(i, debug=1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # Test script
-    db = TickerValidator('test.db', debug=1)
+    db = TickerValidator("test.db", debug=1)
     print("Checking MSFT")
-    print(db.is_valid('MSFT'))
+    print(db.is_valid("MSFT"))
     print("Checking MSFT")
-    print(db.is_valid('MSFT'))
+    print(db.is_valid("MSFT"))
     print("Checking INVALID")
-    print(db.is_valid('INVALID'))
+    print(db.is_valid("INVALID"))
     print("Checking INVALID")
-    print(db.is_valid('INVALID'))
+    print(db.is_valid("INVALID"))
     db.revalidate_all()
     # Need that to avoid warning at exit
     del db
