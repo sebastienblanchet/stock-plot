@@ -69,7 +69,7 @@ class RedditComment(RedditRecord):
 
 class RedditGenerator:
     def __init__(self, s_name, s_time, e_time):
-        """ constructor
+        """
         :param s_name: subreddit name
         :param s_time: start time as a datetime object
         :param e_time: end time as a datetime object
@@ -77,26 +77,30 @@ class RedditGenerator:
         self.s_name = s_name
         self.s_time = int(s_time.timestamp())
         self.e_time = int(e_time.timestamp())
+        self._api = PushshiftAPI()
 
     def __iter__(self):
         return self
 
-    def save(self, fn):
+    def save_all(self, fn):
         """ save the content of the generator as a picked list """
         with open(fn, "wb") as f:
             pickle.dump(list(self), f)
 
 
-class RedditSubmissionGenerator(RedditGenerator):
+class SubmissionGenerator(RedditGenerator):
     """ Class for download Reddit posts """
 
     def __init__(self, s_name, s_time, e_time, download_deleted=False):
-        """ constructor
+        """
+        :param s_name: subreddit name
+        :param s_time: start time as a datetime object
+        :param e_time: end time as a datetime object
         :param download_deleted: whether to download deleted posts
         """
         super().__init__(s_name, s_time, e_time)
         self.download_deleted = download_deleted
-        self._gen = PushshiftAPI().search_submissions(
+        self._gen = self._api.search_submissions(
             subreddit=self.s_name, after=self.s_time, before=self.e_time,
             filter=['subreddit', 'author', 'permalink', 'score', 'created_utc',
                     'title', 'selftext', 'upvote_ratio', 'removed_by_category'])
@@ -130,12 +134,17 @@ class RedditSubmissionGenerator(RedditGenerator):
         return r
 
 
-class RedditCommentGenerator(RedditGenerator):
+class CommentGenerator(RedditGenerator):
     """ Class for download Reddit comments """
 
     def __init__(self, s_name, s_time, e_time):
+        """
+        :param s_name: subreddit name
+        :param s_time: start time as a datetime object
+        :param e_time: end time as a datetime object
+        """
         super().__init__(s_name, s_time, e_time)
-        self._gen = PushshiftAPI().search_comments(
+        self._gen = self._api.search_comments(
             subreddit=self.s_name, after=self.s_time, before=self.e_time,
             filter=['subreddit', 'author', 'permalink', 'score', 'created_utc',
                     'body'])
@@ -166,18 +175,18 @@ if __name__ == '__main__':
     e_time = datetime.now()
     s_time = e_time - timedelta(1)
 
-    post_gen = RedditSubmissionGenerator('pennystocks', s_time, e_time)
-    comment_gen = RedditCommentGenerator('pennystocks', s_time, e_time)
+    post_gen = SubmissionGenerator('pennystocks', s_time, e_time)
+    comment_gen = CommentGenerator('pennystocks', s_time, e_time)
 
     print(next(post_gen))
     print(next(comment_gen))
 
     post_fn = 'submission-' + post_gen.s_name + \
               str(datetime.now().isoformat()) + '.pickle'
-    post_gen.save(post_fn)
+    post_gen.save_all(post_fn)
     comment_fn = 'comment-' + post_gen.s_name + \
                  str(datetime.now().isoformat()) + '.pickle'
-    comment_gen.save(comment_fn)
+    comment_gen.save_all(comment_fn)
 
     with open(post_fn, "rb") as f:
         posts = pickle.load(f)
