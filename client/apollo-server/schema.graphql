@@ -1,0 +1,39 @@
+"Included scalars"
+scalar JSON
+scalar Upload
+
+type Query {
+  "get all plot ids & name"
+  getPlots: [Plotly!]
+  "get a single plot object"
+  getPlotly(id: ID!): Plotly!
+}
+
+type Mutation {
+  myMutation: String!
+}
+
+type Plotly {
+  id: ID!
+  name: String
+  data: [Data]
+  layout: Layout
+  attr: Attributes
+}
+
+type Data {
+  type: String
+  x: [Float]
+  y: [Float]
+  "will have to unpack since grapql does not support matrices"
+  z: [Float]
+}
+
+type Layout {
+  title: String
+  paper_bgcolor: String
+}
+
+type Attributes {
+  displayModeBar: Boolean
+}
