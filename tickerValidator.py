@@ -99,20 +99,3 @@ class TickerValidator:
         """ revalidate all ticket symbols """
         for i in self.db.keys():
             self.validate(i, debug=1)
-
-
-if __name__ == "__main__":
-
-    # Test script
-    db = TickerValidator("test.db", debug=1)
-    print("Checking MSFT")
-    print(db.is_valid("MSFT"))
-    print("Checking MSFT")
-    print(db.is_valid("MSFT"))
-    print("Checking INVALID")
-    print(db.is_valid("INVALID"))
-    print("Checking INVALID")
-    print(db.is_valid("INVALID"))
-    db.revalidate_all()
-    # Need that to avoid warning at exit
-    del db

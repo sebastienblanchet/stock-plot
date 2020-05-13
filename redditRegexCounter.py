@@ -137,20 +137,3 @@ class CommentCounter(RegexCounter):
             result = {}
         super().__init__(CommentGenerator(s_name, s_time, e_time),
                          ["body"], pattern, case, result)
-
-
-if __name__ == "__main__":
-    ## Test script
-
-    from datetime import timedelta, datetime
-    e_time = datetime.now()
-    s_time = e_time - timedelta(1)
-    s_name = "pennystocks"
-    pattern = "[A-Za-z]{3,4}"
-    s_counter = SubmissionCounter(s_name, s_time, e_time, pattern, case=1)
-    print("s_counter")
-    print(s_counter.get_result())
-    c_counter = CommentCounter(s_name, s_time, e_time, pattern, case=1,
-                               result=s_counter.result)
-    print("c_counter")
-    print(c_counter.get_result())

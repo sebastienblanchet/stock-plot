@@ -51,10 +51,10 @@ class RedditSubmission(RedditRecord):
 
     def __repr__(self):
         return super().__repr__() + \
-            "title: " + str(self.title) + "\n" + \
-            "selftext: " + str(self.selftext) + "\n" + \
-            "upvote_ratio: " + str(self.upvote_ratio) + "\n" + \
-            "removed_by_category: " + str(self.removed_by_category) + "\n"
+               "title: " + str(self.title) + "\n" + \
+               "selftext: " + str(self.selftext) + "\n" + \
+               "upvote_ratio: " + str(self.upvote_ratio) + "\n" + \
+               "removed_by_category: " + str(self.removed_by_category) + "\n"
 
 
 class RedditComment(RedditRecord):
@@ -64,7 +64,7 @@ class RedditComment(RedditRecord):
 
     def __repr__(self):
         return super().__repr__() + \
-            "body: " + str(self.body) + "\n"
+               "body: " + str(self.body) + "\n"
 
 
 class RedditGenerator:
@@ -166,35 +166,3 @@ class CommentGenerator(RedditGenerator):
                           created_utc=p.created_utc,
                           body=p.body)
         return r
-
-
-if __name__ == "__main__":
-    ## Test script ##
-    from datetime import timedelta, datetime
-
-    e_time = datetime.now()
-    s_time = e_time - timedelta(1)
-
-    post_gen = SubmissionGenerator("pennystocks", s_time, e_time)
-    comment_gen = CommentGenerator("pennystocks", s_time, e_time)
-
-    print(next(post_gen))
-    print(next(comment_gen))
-
-    post_fn = "submission-" + post_gen.s_name + \
-              str(datetime.now().isoformat()) + ".pickle"
-    post_gen.save_all(post_fn)
-    comment_fn = "comment-" + post_gen.s_name + \
-                 str(datetime.now().isoformat()) + ".pickle"
-    comment_gen.save_all(comment_fn)
-
-    with open(post_fn, "rb") as f:
-        posts = pickle.load(f)
-
-    with open(comment_fn, "rb") as f:
-        comments = pickle.load(f)
-
-    print("No. submission " + str(len(posts)))
-    print(posts[1])
-    print("No. comments " + str(len(comments)))
-    print(comments[1])
