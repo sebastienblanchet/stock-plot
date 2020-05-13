@@ -26,25 +26,12 @@ import sys
 
 
 class TickerValidator:
-    """This class validates whether a word is a valid ticker code
-
-        We basically "learn" whether a word is a valid ticker code, and store
-        it in a database
-    """
-
     def __init__(self, fn, debug=0):
-        """ Constructor
-        :param fn: backing file which stores the ticker database
-        :param debug: whether we are in debug mode
         """
-        self.db = {}
+        :param fn: backing file which stores the ticker database
+        """
         self.fn = fn
         self.debug = debug
-        try:
-            self.load(fn)
-        except FileNotFoundError:
-            print("Creating a new database", file=sys.stderr)
-            self.db = {}
 
     def __del__(self):
         self.save()
@@ -60,6 +47,27 @@ class TickerValidator:
         """ save the ticker database """
         with open(self.fn, "wb") as f:
             pickle.dump(self.db, f)
+
+
+class YahooTickerValidator(TickerValidator):
+    """Ticker code validator using Yahoo Finance
+
+        We basically "learn" whether a word is a valid ticker code, and store
+        it in a database
+    """
+
+    def __init__(self, fn, debug=0):
+        """
+        :param fn: backing file which stores the ticker database
+        :param debug: whether we are in debug mode
+        """
+        super().__init__(fn, debug)
+        self.db = {}
+        try:
+            self.load(fn)
+        except FileNotFoundError:
+            print("Creating a new database", file=sys.stderr)
+            self.db = {}
 
     def remove(self, sym):
         """ remove a ticker from the database """
@@ -101,6 +109,44 @@ class TickerValidator:
 
     def validate_dict(self, d):
         """ validate a whole dictionary """
-        d = dict(filter(lambda x:self.is_valid(x[0]), d.items()))
-        d = dict(sorted(d.items(), key=lambda x:x[1], reverse=True))
+        d = dict(filter(lambda x: self.is_valid(x[0]), d.items()))
+        d = dict(sorted(d.items(), key=lambda x: x[1], reverse=True))
+        return d
+
+
+class NASDAQTickerValidator(TickerValidator):
+    """ Ticker code validator based on NASDAQ csv list"""
+
+    def __init__(self, fn, debug=0):
+        """
+        :param fn: the ticker database pickle file
+        :param debug: whether or not enable debug
+        """
+        super().__init__(fn, debug)
+        self.db = []
+        try:
+            self.load(fn)
+        except FileNotFoundError:
+            print("Creating a new database", file=sys.stderr)
+            self.download()
+
+    def download(self):
+        from urllib import request
+        from os import remove
+        from pandas import read_csv
+        url = 'https://old.nasdaq.com/screening/companies-by-name.aspx?&render=download'
+        fn = 'companylist.csv'
+        request.urlretrieve(url, fn)
+        companylist = read_csv(fn)
+        remove(fn)
+        self.db = list(companylist.Symbol)
+        self.save()
+
+    def is_valid(self, sym):
+        return sym in self.db
+
+    def validate_dict(self, d):
+        """ validate a whole dictionary """
+        d = dict(filter(lambda x: x[0] in self.db, d.items()))
+        d = dict(sorted(d.items(), key=lambda x: x[1], reverse=True))
         return d

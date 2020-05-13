@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from redditRegexCounter import SubmissionCounter, CommentCounter
-from tickerValidator import TickerValidator
+from tickerValidator import NASDAQTickerValidator
 
 
 def print_ticker_count(tbl):
@@ -28,10 +28,10 @@ def print_ticker_count(tbl):
     :param tbl: the input dictionary with ticker count
     :return: a string containing the formatted output
     """
-    s = "ticker:\tcount:\n"
+    s = "Ticker:\tCount:\n"
     for i in tbl.items():
         s += str(i[0]) + "\t" + str(i[1]) + "\n"
-    return s
+    print(s)
 
 
 def count_subreddit_ticker(s_name, s_time, e_time, dbfn, result=None, debug=0):
@@ -49,7 +49,7 @@ def count_subreddit_ticker(s_name, s_time, e_time, dbfn, result=None, debug=0):
     """
     if result is None:
         result = {}
-    pattern = r"\b[a-z]{3,5}\b|\b[A-Z]{3,5}\b"
+    pattern = r"\b[A-Z]{3,5}\b"
     s_counter = SubmissionCounter(s_name, s_time, e_time, pattern, case=1,
                                   result=result)
     s_counter.get_result()
@@ -57,6 +57,6 @@ def count_subreddit_ticker(s_name, s_time, e_time, dbfn, result=None, debug=0):
                                result=s_counter.result)
     c_counter.get_result()
 
-    validator = TickerValidator(dbfn, debug)
-    validator.validate_dict(c_counter.result)
+    validator = NASDAQTickerValidator(dbfn, debug)
+    result = validator.validate_dict(c_counter.result)
     return result

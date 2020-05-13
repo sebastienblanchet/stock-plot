@@ -21,7 +21,6 @@ __author__ = "Fufu Fang"
 __copyright__ = "The GNU General Public License v3.0"
 
 from redditDownloader import SubmissionGenerator, CommentGenerator
-from collections import OrderedDict
 import pickle
 import re
 
