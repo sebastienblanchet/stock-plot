@@ -49,7 +49,7 @@ def count_subreddit_ticker(s_name, s_time, e_time, dbfn, result=None, debug=0):
     """
     if result is None:
         result = {}
-    pattern = "\b[a-z]{3,5}\b|\b[A-Z]{3,5}\b"
+    pattern = r"\b[a-z]{3,5}\b|\b[A-Z]{3,5}\b"
     s_counter = SubmissionCounter(s_name, s_time, e_time, pattern, case=1,
                                   result=result)
     s_counter.get_result()
