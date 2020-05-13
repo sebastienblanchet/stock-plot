@@ -21,6 +21,7 @@ __author__ = "Fufu Fang"
 __copyright__ = "The GNU General Public License v3.0"
 
 from redditDownloader import SubmissionGenerator, CommentGenerator
+from collections import OrderedDict
 import pickle
 import re
 
@@ -29,7 +30,7 @@ class RegexCounter:
     """Class for counting the number of regex appearance from a generator
     """
 
-    def __init__(self, gen, attr, pattern, case=0, dict=None):
+    def __init__(self, gen, attr, pattern, case=0, result=None):
         """
         :param gen: the generator for the items
         :param attr: the attributes within the item which contain the text
@@ -38,15 +39,15 @@ class RegexCounter:
             - -1, convert to lower caser
             - 0, does not perform case conversion
             - 1, convert to upper case
-        :param dict: the optional dictionary which contains previous results
+        :param result: the optional resultionary which contains previous results
         """
-        if dict is None:
-            dict = {}
+        if result is None:
+            result = {}
         self._gen = gen
         self.attr = attr
         self.pattern = pattern
         self.case = case
-        self.dict = dict
+        self.result = result
 
     def __iter__(self):
         return self
@@ -65,30 +66,38 @@ class RegexCounter:
                 else:
                     raise ValueError("case must be either -1, 0, or 1")
 
-                if word in self.dict:
-                    self.dict[word] += 1
+                if word in self.result:
+                    self.result[word] += 1
                 else:
-                    self.dict[word] = 1
-        return self.dict
+                    self.result[word] = 1
+        self.result = dict(sorted(self.result.items(), key=lambda x:x[1],
+                             reverse=True))
+        return self
 
-    def save_dict(self, fn):
+    def save_result(self, fn):
         with open(fn, "wb") as f:
-            pickle.dump(self.dict, f)
+            pickle.dump(self.result, f)
 
-    def load_dict(self, fn):
+    def load_result(self, fn):
         with open(fn, "rb") as f:
-            self.dict = pickle.load(f)
+            self.result = pickle.load(f)
 
     def get_result(self):
         for i in self:
             pass
-        return self.dict
+        return self
+
+    def __repr__(self):
+        s = "word:\tcount:\n"
+        for i in self.result.items():
+            s += str(i[0]) + "\t" + str(i[1]) + "\n"
+        return s
 
 
 class SubmissionCounter(RegexCounter):
     """ Class for counting regex in a Reddit submission """
 
-    def __init__(self, s_name, s_time, e_time, pattern, case=0, dict=None,
+    def __init__(self, s_name, s_time, e_time, pattern, case=0, result=None,
                  download_deleted=False):
         """
         :param s_name: subreddit name
@@ -99,20 +108,20 @@ class SubmissionCounter(RegexCounter):
             - -1, convert to lower caser
             - 0, does not perform case conversion
             - 1, convert to upper case
-        :param dict: the optional dictionary which contains previous results
+        :param result: the optional resultionary which contains previous results
         :param download_deleted: whether to download deleted posts
         """
-        if dict is None:
-            dict = {}
+        if result is None:
+            result = {}
         super().__init__(SubmissionGenerator(s_name, s_time, e_time,
                                              download_deleted),
-                         ['title', 'selftext'], pattern, case, dict)
+                         ["title", "selftext"], pattern, case, result)
 
 
 class CommentCounter(RegexCounter):
     """ Class for counting regex in a Reddit comment"""
 
-    def __init__(self, s_name, s_time, e_time, pattern, case=0, dict=None):
+    def __init__(self, s_name, s_time, e_time, pattern, case=0, result=None):
         """
         :param s_name: subreddit name
         :param s_time: start time as a datetime object
@@ -122,25 +131,26 @@ class CommentCounter(RegexCounter):
             - -1, convert to lower caser
             - 0, does not perform case conversion
             - 1, convert to upper case
-        :param dict: the optional dictionary which contains previous results
+        :param result: the optional resultionary which contains previous results
         """
-        if dict is None:
-            dict = {}
+        if result is None:
+            result = {}
         super().__init__(CommentGenerator(s_name, s_time, e_time),
-                         ['body'], pattern, case, dict)
+                         ["body"], pattern, case, result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ## Test script
 
     from datetime import timedelta, datetime
     e_time = datetime.now()
     s_time = e_time - timedelta(1)
-    s_name = 'pennystocks'
+    s_name = "pennystocks"
     pattern = "[A-Za-z]{3,4}"
     s_counter = SubmissionCounter(s_name, s_time, e_time, pattern, case=1)
-    c_counter = CommentCounter(s_name, s_time, e_time, pattern, case=1)
-    print('s_counter')
+    print("s_counter")
     print(s_counter.get_result())
-    print('c_counter')
+    c_counter = CommentCounter(s_name, s_time, e_time, pattern, case=1,
+                               result=s_counter.result)
+    print("c_counter")
     print(c_counter.get_result())
