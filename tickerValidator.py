@@ -34,7 +34,7 @@ class TickerValidator:
 
     def __init__(self, fn, debug=0):
         """ Constructor
-        :param fn: backing file which stores
+        :param fn: backing file which stores the ticker database
         :param debug: whether we are in debug mode
         """
         self.db = {}
@@ -47,7 +47,7 @@ class TickerValidator:
             self.db = {}
 
     def __del__(self):
-        self.save(self.fn)
+        self.save()
 
     def load(self, fn):
         """ load the ticker database
@@ -56,11 +56,9 @@ class TickerValidator:
         with open(fn, "rb") as f:
             self.db = pickle.load(f)
 
-    def save(self, fn):
-        """ save the ticker database
-        :param fn: database filename
-        """
-        with open(fn, "wb") as f:
+    def save(self):
+        """ save the ticker database """
+        with open(self.fn, "wb") as f:
             pickle.dump(self.db, f)
 
     def remove(self, sym):
@@ -85,6 +83,7 @@ class TickerValidator:
         if self.debug or debug:
             print("Checked " + sym + " with Yahoo Finance... " + str(r),
                   file=sys.stderr)
+        self.save()
         return r
 
     def is_valid(self, sym):
@@ -99,3 +98,9 @@ class TickerValidator:
         """ revalidate all ticket symbols """
         for i in self.db.keys():
             self.validate(i, debug=1)
+
+    def validate_dict(self, d):
+        """ validate a whole dictionary """
+        d = dict(filter(lambda x:self.is_valid(x[0]), d.items()))
+        d = dict(sorted(d.items(), key=lambda x:x[1], reverse=True))
+        return d

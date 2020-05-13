@@ -85,7 +85,7 @@ class RegexCounter:
     def get_result(self):
         for i in self:
             pass
-        return self
+        return self.result
 
     def __repr__(self):
         s = "word:\tcount:\n"

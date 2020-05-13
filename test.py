@@ -82,9 +82,14 @@ def reddit_regix_counter_test():
     s_name = "pennystocks"
     pattern = "[A-Za-z]{3,4}"
     s_counter = SubmissionCounter(s_name, s_time, e_time, pattern, case=1)
-    print("s_counter")
-    print(s_counter.get_result())
+    s_counter.get_result()
     c_counter = CommentCounter(s_name, s_time, e_time, pattern, case=1,
                                result=s_counter.result)
-    print("c_counter")
-    print(c_counter.get_result())
+    c_counter.get_result()
+    print(c_counter)
+    c_counter.get_result()
+    print(c_counter)
+
+
+if __name__ == '__main__':
+    reddit_regix_counter_test()
